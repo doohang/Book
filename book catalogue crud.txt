@@ -1,0 +1,175 @@
+package net.java.bookcatalogue.dao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import net.java.bookcatalogue.model.Book;
+
+/**
+ * This class provides CRUD database operations for the table users in the database.
+ * 
+ * @author doo.hong
+ *
+ */
+public class BookDAO {
+    private String jdbcURL = "jdbc:mysql://localhost:3306/book?useSSL=false";
+    private String jdbcUsername = "root";
+    private String jdbcPassword = "root";
+
+    private static final String INSERT_BOOKS_SQL = "INSERT INTO books" + "  (title, author, isbn, publication) VALUES " + " (?, ?, ?, ?);";
+    private static final String SELECT_BOOK_BY_TITLE = "SELECT id, title, author, isbn, publication FROM books WHERE title =?";
+    private static final String SELECT_BOOK_BY_AUTHOR = "SELECT id, title, author, isbn, publication FROM books WHERE author =?";
+    private static final String SELECT_BOOK_BY_ISBN = "SELECT id, title, author, isbn, publication FROM books WHERE isbn =?";
+    private static final String SELECT_ALL_BOOKS = "SELECT * FROM books";
+    private static final String DELETE_BOOKS_SQL = "DELETE FROM books WHERE isbn = ?;";
+    private static final String UPDATE_BOOKS_SQL = "UPDATE books SET title = ?, author= ?, publication = ? WHERE isbn = ?;";
+
+    public BookDAO() {}
+
+    protected Connection getConnection() {
+        Connection connection = null;
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            connection = DriverManager.getConnection(jdbcURL, jdbcUsername, jdbcPassword);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return connection;
+    }
+
+    public void insertBook(Book book) throws SQLException {
+        System.out.println(INSERT_BOOKS_SQL);
+        try (Connection connection = getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(INSERT_BOOKS_SQL)) {
+            preparedStatement.setString(1, book.getTitle());
+            preparedStatement.setString(2, book.getAuthor());
+            preparedStatement.setInt(3, book.getISBN());
+            preparedStatement.setDate(4, book.getPublication());
+            System.out.println(preparedStatement);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+    }
+
+    public Book selectBookIsbn(int isbn) {
+        Book book = null;
+        try (Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_BY_ISBN);) {
+            preparedStatement.setInt(1, isbn);
+            System.out.println(preparedStatement);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String title = rs.getString("title");
+                String author = rs.getString("author");
+                Date publication = rs.getDate("publication");
+                book = new Book(id, title, author, isbn, publication);
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return book;
+    }
+
+    public Book selectBookTitle(String title) {
+        Book book = null;
+        try (Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_BY_TITLE);) {
+            preparedStatement.setString(1, title);
+            System.out.println(preparedStatement);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String author = rs.getString("author");
+                int isbn = rs.getInt("isbn");
+                Date publication = rs.getDate("publication");
+                book = new Book(id, title, author, isbn, publication);
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return book;
+    }
+
+    public Book selectBookAuthor(String author) {
+        Book book = null;
+        try (Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_BY_AUTHOR);) {
+            preparedStatement.setString(1, author);
+            System.out.println(preparedStatement);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                String title = rs.getString("title");
+                int isbn = rs.getInt("isbn");
+                Date publication = rs.getDate("publication");
+                book = new Book(id, title, author, isbn, publication);
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return book;
+    }
+
+    public List < Book > selectAllBooks() {
+        List < Book > books = new ArrayList < > ();
+        try (Connection connection = getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_BOOKS);) {
+            System.out.println(preparedStatement);
+            ResultSet rs = preparedStatement.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String title = rs.getString("title");
+                String author = rs.getString("author");
+                int isbn = rs.getString("isbn");
+                Date publication = rs.getDate("publication");
+                books.add(new Book(id, title, author, isbn, publication));
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return books;
+    }
+
+    public boolean deleteBook(int isbn) throws SQLException {
+        boolean rowDeleted;
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(DELETE_BOOKS_SQL);) {
+            statement.setInt(1, isbn);
+            rowDeleted = statement.executeUpdate() > 0;
+        }
+        return rowDeleted;
+    }
+
+    public boolean updateBook(int isbn) throws SQLException {
+        boolean rowUpdated;
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(UPDATE_BOOKS_SQL);) {
+            statement.setString(1, user.getTitle());
+            statement.setString(2, user.getAuthor());
+            statement.setInt(3, user.getISBN());
+            statement.setDate(4, user.getPublication());
+
+            rowUpdated = statement.executeUpdate() > 0;
+        }
+        return rowUpdated;
+    }
+
+    private void printSQLException(SQLException ex) {
+        for (Throwable e: ex) {
+            if (e instanceof SQLException) {
+                e.printStackTrace(System.err);
+                System.err.println("SQLState: " + ((SQLException) e).getSQLState());
+                System.err.println("Error Code: " + ((SQLException) e).getErrorCode());
+                System.err.println("Message: " + e.getMessage());
+                Throwable t = ex.getCause();
+                while (t != null) {
+                    System.out.println("Cause: " + t);
+                    t = t.getCause();
+                }
+            }
+        }
+    }
+}

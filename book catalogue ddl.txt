@@ -1,0 +1,11 @@
+CREATE DATABASE 'book';
+USE book;
+
+create table books (
+    id int(3) NOT NULL AUTO_INCREMENT,
+    title varchar(120) NOT NULL,
+    author varchar(220) NOT NULL,
+    isbn int(13),
+    publication date,
+    PRIMARY KEY (id)
+);
